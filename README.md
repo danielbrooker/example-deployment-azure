@@ -1,6 +1,12 @@
 # example-deployment-azure
 Example - Azure Deployment
 
+:toc: macro
+:toc-title:
+:toclevels: 99
+# Title
+
+toc::[]
 
 ## Automated ELK Stack Deployment
 
