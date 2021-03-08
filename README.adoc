@@ -37,15 +37,17 @@ Integrating an ELK server allows users to easily monitor the vulnerable VMs for 
 - _TODO: What does Filebeat watch for?_
 - _TODO: What does Metricbeat record?_
 
-The configuration details of each machine may be found below.
-_Note: Use the [Markdown Table Generator](http://www.tablesgenerator.com/markdown_tables) to add/remove values from the table_.
-
-| Name     | Function | IP Address | Operating System |
-|----------|----------|------------|------------------|
-| Jump Box | Gateway  | 10.0.0.1   | Linux            |
-| TODO     |          |            |                  |
-| TODO     |          |            |                  |
-| TODO     |          |            |                  |
+The configuration details of each virtual machine in the Azure enviroment are below :
+.An example table
+[options="header        "]
+|=======================
+|Name|Function      |Internal IP Address |Public IP Address | Operating System | Location | Azure Machine Specification
+|VM-ELK01 | ELK Stack | 10.1.0.4 | 20.198.240.164 [ monitoring.SideProjectA.com ] | Ubuntu 18.04-LTS | Southeast Asia | Standard B2s (2 vcpus, 4 GiB memory)
+|VM-JumpBox | Jumpbox |10.0.0.4 | 20.40.72.141 [ jump.SideProjectA.com ] | Ubuntu 18.04-LTS | Australia East | Standard B1s (1 vcpus, 1 GiB memory)
+|VM-Web01 | Web Server |10.0.0.5 | -- | Ubuntu 18.04-LTS | Australia East | Standard B1ms (1 vcpus, 2 GiB memory)
+|VM-Web02 | Web Server |10.0.0.6 | -- | Ubuntu 18.04-LTS | Australia East | Standard B1ms (1 vcpus, 2 GiB memory)
+|VM-Web03 | Web Server |10.0.0.7 | -- | Ubuntu 18.04-LTS | Australia East | Standard B1ms (1 vcpus, 2 GiB memory)
+|===============
 
 ### Access Policies
 
