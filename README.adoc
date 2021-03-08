@@ -38,8 +38,9 @@ Integrating an ELK server allows users to easily monitor the vulnerable VMs for 
 - _TODO: What does Metricbeat record?_
 
 The configuration details of each virtual machine in the Azure enviroment are below :
-.An example table
-[options="header        "]
+
+.Azure Virtual Machines - Configuration & Specification
+[options="header"]
 |=======================
 |Name|Function      |Internal IP Address |Public IP Address | Operating System | Location | Azure Machine Specification
 |VM-ELK01 | ELK Stack | 10.1.0.4 | 20.198.240.164 [ monitoring.SideProjectA.com ] | Ubuntu 18.04-LTS | Southeast Asia | Standard B2s (2 vcpus, 4 GiB memory)
