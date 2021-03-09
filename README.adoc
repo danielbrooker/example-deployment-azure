@@ -1,8 +1,7 @@
 :toc: macro
 :toc-title:
 :toclevels: 99
-## example-deployment-azure
-Project - Azure ELK Deployment
+# Project - Azure ELK Deployment
 
 toc::[]
 
@@ -38,16 +37,20 @@ _In a security context, the primary advantage of using a load balancer is to rem
 
 _Additionally, a 'jumpbox' has been made use of, and SSH access to the web servers have been restricted to this virtual machine [ e.g. SSH access to the web servers is only possible via the 'jumpbox' ]. Use of a 'jumpbox' reduces the amount of admistration interfaces that are exposed to the public Internet, and provides a single, centralized [ and auditable ] location to administer resources within the Azure enviroment._
 
-Integrating an ELK server allows users to easily monitor the vulnerable VMs for changes to the _____ and system _____.
-- _TODO: What does Filebeat watch for?_
-- _TODO: What does Metricbeat record?_
+Integrating an ELK server allows users to easily monitor the vulnerable VMs for changes to the _system's configuration_ and system _files_.
+
+- _Filebeat is designed to monitor log files on a local computer, and then to perodically parse these log files and foward to a centralized storage solution [ e.g. Elasticsearch ]._
+
+- _Metricbeat is designed to periodically report specific metrics from the local computer's operating system [ e.g. CPU load, memory usage, services/processes, etc. ] and specific applications/services [ e.g. Apache, MongoDB, MySQL, etc. ] back to a centralized storage solution  [ e.g. Elasticsearch ]._
+
+- _winLogBeat is designed to monitor the Event Logs from a Windows computer, and then perodically parse and forward these to a centralized storage solution [ e.g. Elasticsearch ]._
 
 The configuration details of each virtual machine in the Azure enviroment are below :
 
 .Azure Virtual Machines - Configuration & Specification
 [options="header"]
 |=======================
-|Name|Function      |Internal IP Address |Public IP Address | Operating System | Location | Azure Machine Specification
+|Hostname|Function      |Internal IP Address |Public IP Address | Operating System | Location | Azure Machine Specification
 |VM-ELK01 | ELK Stack | 10.1.0.4 | 20.198.240.164 [ monitoring.SideProjectA.com ] | Ubuntu 18.04-LTS | Southeast Asia | Standard B2s (2 vcpus, 4 GiB memory)
 |VM-JumpBox | Jumpbox |10.0.0.4 | 20.40.72.141 [ jump.SideProjectA.com ] | Ubuntu 18.04-LTS | Australia East | Standard B1s (1 vcpus, 1 GiB memory)
 |VM-Web01 | Web Server |10.0.0.5 | -- | Ubuntu 18.04-LTS | Australia East | Standard B1ms (1 vcpus, 2 GiB memory)
@@ -60,19 +63,68 @@ The configuration details of each virtual machine in the Azure enviroment are be
 
 The machines on the internal network are not exposed to the public Internet. 
 
-Only the _____ machine can accept connections from the Internet. Access to this machine is only allowed from the following IP addresses:
-- _TODO: Add whitelisted IP addresses_
+The only network resources _directly_ accessible from the public Internet are as follows :
 
-Machines within the network can only be accessed by _____.
-- _TODO: Which machine did you allow to access your ELK VM? What was its IP address?_
+.Azure Resources - Directly accessible via public Internet
+[options="header"]
+|=======================
+|Hostname|Public IP Address | F.Q.D.N. | Access Protocols
+|VM-ELK01 | 20.198.240.164 | monitoring.SideProjectA.com | Kibana [ 5601 ] ; Elasticsearch [ 9200 ] |VM-JumpBox | 20.40.72.141 | jump.SideProjectA.com | SSH [ 22 ]
+|Web Load Balancer | 20.53.90.29 | dvwa.SideProjectA.com | HTTP [ 80 ]
+|=======================
 
-A summary of the access policies in place can be found in the table below.
+The specific Inbound/Outbound Access Rules for the two Azure Network Security Groups are listed in detail below.
+The following is a high-level summary/outline :
 
-| Name     | Publicly Accessible | Allowed IP Addresses |
-|----------|---------------------|----------------------|
-| Jump Box | Yes/No              | 10.0.0.1 10.0.0.2    |
-|          |                     |                      |
-|          |                     |                      |
+* Only the 'jumpbox', ELK stack VM and load balance for the web server farm have _direct_ inbound access from the public Internet.
+* Administration of the web server VMs is _only_ via SSH from the 'jumpbox'.
+* Access to the 'jumpbox' is _only_ via SSH, and _only_ from one external IP address [ xxx.69.44.210 ].
+* Access to the ELK stack VM is _only_ via Port 5601 and 9200, and _only_ from two external IP addresses [ xxx.254.27.242, xxx.69.44.210 ]
+
+NOTE: Some IP addresses have been obfuscate for security reasons.
+
+.Network Security Group - ELK Stack Network [ VM-ELK01-nsg ] - Inbound Rules
+[options="header"]
+|=======================
+|NSG Name | Priority | Rule Name | Direction | Port Range | Protocol | Source | Destination | Access
+|VM-ELK01-nsg | 1000 | default-allow-ssh | Inbound | 22 | TCP | xxx.69.44.210 | VirtualNetwork | Allow
+|VM-ELK01-nsg | 1030 | Kibana-IN-5601 | Inbound | 5601 | TCP | xxx.254.27.242, xxx.69.44.210 | 10.1.0.4 | Allow
+|VM-ELK01-nsg | 1020 | ElasticSearch-IN-9200 | Inbound | 9200 | TCP | xxx.254.27.242, xxx.69.44.210 | 10.1.0.4 | Allow
+|VM-ELK01-nsg | 65000 | AllowVnetInBound | Inbound | * | * | VirtualNetwork | VirtualNetwork | Allow
+|VM-ELK01-nsg | 65001 | AllowAzureLoadBalancerInBound | Inbound | * | * | AzureLoadBalancer | Any | Allow
+|VM-ELK01-nsg | 65500 | DenyAllInBound | Inbound | * | * | Any | Any | Deny
+|=======================
+
+.Network Security Group - ELK Stack Network [ VM-ELK01-nsg ] - Outbound Rules
+[options="header"]
+|======================= 
+|NSG Name | Priority | Rule Name | Direction | Port Range | Protocol | Source | Destination | Access
+|VM-ELK01-nsg | 65000 | AllowVnetOutBound | Outbound | * | * | VirtualNetwork | VirtualNetwork | Allow
+|VM-ELK01-nsg | 65001 | AllowInternetOutBound | Outbound | * | * | Any | Internet | Allow
+|VM-ELK01-nsg | 65500 | DenyAllOutBound | Outbound | * | * | Any | Any | Deny
+|=======================
+
+.Network Security Group - Web server farm & 'jumpbox' Network [ NSG-Red_Team ] - Inbound Rules
+[options="header"]
+|=======================
+|NSG Name | Priority | Rule Name | Direction | Port Range | Protocol | Source | Destination | Access
+|NSG-Red_Team | 3000 | Allow-IP-TCP-22-61.69.44.210 | Inbound | 22 | TCP | xxx.69.44.210 | VirtualNetwork | Allow
+|NSG-Red_Team | 3001 | SSH-from-VM-JumpBox | Inbound | 22 | TCP | 10.0.0.4 | VirtualNetwork | Allow
+|NSG-Red_Team | 3002 | Web_Services | Inbound | 80 | TCP | Any | VirtualNetwork | Allow
+|NSG-Red_Team | 65000 | AllowVnetInBound | Inbound | * | * | VirtualNetwork | VirtualNetwork | Allow
+|NSG-Red_Team | 65001 | AllowAzureLoadBalancerInBound | Inbound | * | * | AzureLoadBalancer | Any | Allow
+|NSG-Red_Team | 65500 | DenyAllInBound | Inbound | * | * | Any | Any | Deny
+|=======================
+
+.Network Security Group - Web server farm & 'jumpbox' Network [ NSG-Red_Team ] - Outbound Rules
+[options="header"]
+|=======================
+|NSG Name | Priority | Rule Name | Direction | Port Range | Protocol | Source | Destination | Access
+|NSG-Red_Team | 3012 | SSH-Out | Outbound | 22 | Any | 10.0.0.4 | Any | Allow
+|NSG-Red_Team | 65000 | AllowVnetOutBound | Outbound | * | * | VirtualNetwork | VirtualNetwork | Allow
+|NSG-Red_Team | 65001 | AllowInternetOutBound | Outbound | * | * | Any | Internet | Allow
+|NSG-Red_Team | 65500 | DenyAllOutBound | Outbound | * | * | Any | Any | Deny
+|=======================
 
 ### Elk Configuration
 
