@@ -135,16 +135,20 @@ Ansible was used to automate configuration of the ELK machine. Automation of sof
 - Usage of Ansible enables administration, security, software and/or configuration changes to be rolled out to all machines in the enviroment quickly and indentially.
 - Once developed, an Ansible playbook can be re-used to rebuild, or re-deploy, entire enviroments.
 
-The playbook implements the following tasks:
-- _TODO: In 3-5 bullets, explain the steps of the ELK installation play. E.g., install Docker; download image; etc._
-- ...
-- ...
+The ELK installation playbook implements the following tasks:
+NOTE: ELK installation playbook is located at : https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/install-elk.yml
 
-The following screenshot displays the result of running `docker ps` after successfully configuring the ELK instance.
+- ELK is installed _only_ onto machines under the `elk` section in `hosts` file.
+- Virtual memory for the ELK stack is set [ default values are likely to be too small ].
+  [ Reference : https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html ].
+- `docker.io` installed [ Docker software for holding/managing containers ].
+- `pip` package installer for Python installed, along with Docker Python module.
+- ELK stack docker is downloaded, set to run and bound to specific Ports [ 5601 | 9200 | 5044 ]. [ The specific container used is `sebp/elk:761`[ sebp is the organization that made the container. elk is the container and 761 is the version ] ].
+- Ensure that the Docker service is set to run on start-up [ to ensure that ELK stack starts automatically with VM ].
+
+The following screenshot displays the result of running `docker ps` after successfully configuring the ELK instance :
 
 image::https://github.com/danielbrooker/example-deployment-azure/blob/main/ScreenShots/202103092221-Screenshot-Docker-ELK.png[Screenshot of ELK Docker] 
-
-![TODO: Update the path with the name of your screenshot of docker ps output](Images/docker_ps_output.png)
 
 ### Target Machines & Beats
 This ELK server is configured to monitor the following machines:
