@@ -130,6 +130,7 @@ NOTE: Some IP addresses have been obfuscate for security reasons.
 ### Elk Configuration
 
 Ansible was used to automate configuration of the ELK machine. Automation of software deployment and configuration via Ansible provides the following advantages :
+
 - Using a predefined Ansible playbook ensures that software is deployed and configured in an identical manner across all targeted machines.
 - Usage of an Ansible playbook simplifies the testing of deployment/configuration in a development enviroment, and subsiqent deployment to the prodution enviroment [ e.g. as the same playbook is used, we can be sure that all aspects are correctly/completely migrated between enviroemnts ].
 - Usage of Ansible enables administration, security, software and/or configuration changes to be rolled out to all machines in the enviroment quickly and indentially.
@@ -152,26 +153,62 @@ image::https://github.com/danielbrooker/example-deployment-azure/blob/main/Scree
 
 ### Target Machines & Beats
 This ELK server is configured to monitor the following machines:
-- _TODO: List the IP addresses of the machines you are monitoring_
 
+.Azure Virtual Machines Monitored by ELK [ fileBeat & metricBeat ]
+[options="header"]
+|=======================
+|Hostname|Function      |Internal IP Address
+|VM-Web01 | Web Server |10.0.0.5
+|VM-Web02 | Web Server |10.0.0.6
+|VM-Web03 | Web Server |10.0.0.7
+|=======================
 
-We have installed the following Beats on these machines:
-- _TODO: Specify which Beats you successfully installed_
+.Physical Machines Monitored by ELK [ winLogBeat ]
+[options="header"]
+|=======================
+|Hostname|Function      |Internal IP Address
+|GN-WS-15 | Windows AutoCAD workstation |10.0.0.103
+|GN-WS-16 | Windows AutoCAD workstation |10.0.0.122
+|GN-WS-17 | Windows AutoCAD workstation |10.0.0.123
+|=======================
 
 These Beats allow us to collect the following information from each machine:
-- _TODO: In 1-2 sentences, explain what kind of data each beat collects, and provide 1 example of what you expect to see. E.g., `Winlogbeat` collects Windows logs, which we use to track user logon events, etc._
+
+- _fileBeat is collecting and forwarding the standard Ubuntu log files from the web server VMs. Possible uses of the information collected by fileBeat could include : monitoring for unexpected usage of sudo, unexpected logons, repeated failed logon attempts, unexpected configuration changes, etc._
+
+- _metricBeat is designed to periodically report specific metrics from the local computer's operating system to the ELK stack. Possible uses for the information gathered by metricBeat could include : determining the overall CPU, or memory, usage of a machine [ over time ]; spotting if machines are unecountering unscheduled or unexpected downtime; services or processes that are unexpectedly or continiously restarting, unexpected services, etc._
+
+- _winLogBeat is monitor the Event Logs from a Windows computers, and then perodically forwarding them tothe ELK stack. Information gathered by winLogBeats can be used in a similar fashion to fileBeat [ e.g. monitoring for unexpected/failed logons, services continiously failing/restarted, etc. ]. Ideally, the installation of winLogBeat should be paired with the installation, and configuration, of SysMon [ to allow logging of more SIEM-focused items [ e.g. process creation events, command line activity, network connections, etc ]._
+
+Screenshots of the various Kibana dashboards [ fileBeat, metricBeat, winLogBeat ] are found in the following location : https://github.com/danielbrooker/example-deployment-azure/tree/main/ScreenShots
 
 ### Using the Playbook
 In order to use the playbook, you will need to have an Ansible control node already configured. Assuming you have such a control node provisioned: 
 
 SSH into the control node and follow the steps below:
-- Copy the _____ file to _____.
-- Update the _____ file to include...
-- Run the playbook, and navigate to ____ to check that the installation worked as expected.
 
-_TODO: Answer the following questions to fill in the blanks:_
-- _Which file is the playbook? Where do you copy it?_
-- _Which file do you update to make Ansible run the playbook on a specific machine? How do I specify which machine to install the ELK server on versus which to install Filebeat on?_
-- _Which URL do you navigate to in order to check that the ELK server is running?
+- Copy required playbook and configuration files into Ansible container [ on 'jumpbox VM '].
+This is likely best acheived by installing `git` into the Ansible container, and then simply pulling this repository.
+- Update/check `hosts` file to ensure that VMs are correctly assigned [ e.g. in the `elk` section ensure that this has the appropriate IP of the VM you will be making into an ELK server, the same goes for the `webservers` ].
+A sample `hosts` file is at the following location : https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/hosts
+- The various playbooks can be run to install various different components [ as show below ]; as an example, the following command would run the playbook to installed the ELK stack `ansible-playbook install-elk.yml`.
 
-_As a **Bonus**, provide the specific commands the user will need to run to download the playbook, update the files, etc._
+.Ansible Playbooks
+[options="header"]
+|=======================
+|Function|Playbook Name | Location | Comments
+|Install ELK stack | `install-elk.yml` | https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/install-elk.yml | This targets hosts under the `elk` section in the `hosts` file.
+|Install DVWA | `install-pentest.yml` | https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/install-pentest.yml | This targets hosts under the `webserver` section in the `hosts` file.
+|Install metricBeat | `install-metricbeat.yml` | https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/install-metricbeat.yml | Currently targeted on the `webservers` section in the `hosts` file.
+|Install fileBeat |`install-filebeat.yml` | https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/filebeat-config.yml | Currently targeted on the `webservers` section in the `hosts` file.
+|=======================
+
+NOTE: There is currently no Ansible playbook for the installation of winLogBeat; this was completed manually [ instructions via https://community.spiceworks.com/how_to/164284-gathering-windows-powershell-and-sysmon-events-with-winlogbeat-elk-7-windows-server-2016-part-2 ]. The base configuration file [ `winlogbeat.yml` ] for winLogBeat is provided in the following location : https://github.com/danielbrooker/example-deployment-azure/blob/main/Ansible/files/winlogbeat.yml ].
+
+- As well as monitoring the output from the Ansible playbook run, manual checks should also be run [ e.g. logging into the various machines, and confirming that the required Docker containers are present and running, and that the various services are accessible [ e.g. can the DVWA be accessed via a web browser ] ].
+
+- To check that fileBeat, metricBeat, or winLogBeat are working as expected, open a web browser to `monitoring.SideProjectA.com:5600` and check the relevant Kibana Dashboards.
+
+### References
+References for all the software packages, deployment methods, troubleshooting exercises, and various other items of note are in the following location : https://github.com/danielbrooker/example-deployment-azure/tree/main/References
+
