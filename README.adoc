@@ -3,6 +3,7 @@
 :toclevels: 99
 # Project - Azure ELK Deployment
 
+.Table of Contents
 toc::[]
 
 ### Automated ELK Stack Deployment
@@ -12,9 +13,9 @@ The files in this repository were used to configure the network depicted below.
 image::https://github.com/danielbrooker/example-deployment-azure/blob/main/ScreenShots/Week_12-Homework-Azure_Network_Diagram.png[Network Diagram]
 
 These files, and additional references, have been used and tested to generate a live ELK deployment in the Azure cloud service.
-_They can be used to either recreate the entire deployment pictured above. Alternatively, select portions of the _____ _file may be used to install only certain pieces of it, such as Filebeat.
-
-  - _TODO: Enter the playbook file._
+_They can be used to either recreate the entire deployment pictured above. Alternately, selected playbooks can be run to install specific components [ e.g. filebeat ]._
+_Ideally, given more time, the various playbooks should be combined/amalgimated, and the use of Ansible Roles used to provide a more complete/compact solution._
+_All files and playbooks used for this enviroment can be found in this GitHub repository [ https://github.com/danielbrooker/example-deployment-azure/tree/main/Ansible ]._
 
 .This document contains the following details:
 
@@ -148,6 +149,7 @@ image::https://github.com/danielbrooker/example-deployment-azure/blob/main/Scree
 ### Target Machines & Beats
 This ELK server is configured to monitor the following machines:
 - _TODO: List the IP addresses of the machines you are monitoring_
+
 
 We have installed the following Beats on these machines:
 - _TODO: Specify which Beats you successfully installed_
